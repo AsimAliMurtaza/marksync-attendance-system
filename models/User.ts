@@ -9,6 +9,10 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ["student", "cr"], default: "student" },
     enrolledClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Class" }],
+    deviceFingerprint: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

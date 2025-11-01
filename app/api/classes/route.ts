@@ -1,39 +1,64 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/libs/mongodb";
 import Class from "@/models/Class";
-import User from "@/models/User";
-import { getServerSession } from "next-auth";
 
 export async function GET() {
   try {
     await dbConnect();
-    const classes = await Class.find();
-
-    console.log("Classes fetched:", classes.length);
-
+    const classes = await Class.find().sort({ createdAt: -1 });
     return NextResponse.json({ success: true, data: classes });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error fetching classes:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
 
-export async function POST(request) {
+export async function POST(req: NextRequest) {
   try {
     await dbConnect();
-    const body = await request.json();
+    const body = await req.json();
 
-    const classData = await Class.create(body);
-    return NextResponse.json(
-      { success: true, data: classData },
-      { status: 201 }
-    );
-  } catch (error) {
+    const {
+      name,
+      code,
+      location,
+      allowedRadius,
+      schedule
+    } = body;
+
+    if (
+      !name ||
+      !code ||
+      !location?.latitude ||
+      !location?.longitude ||
+      !schedule?.dayOfWeek ||
+      !schedule?.startTime ||
+      !schedule?.endTime ||
+      !schedule?.room
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const newClass = await Class.create({
+      name,
+      code,
+      location,
+      allowedRadius,
+      schedule,
+    });
+
+    return NextResponse.json({ success: true, data: newClass });
+  } catch (error: any) {
+    console.error("Error creating class:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

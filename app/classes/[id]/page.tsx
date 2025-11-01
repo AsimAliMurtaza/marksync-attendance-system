@@ -3,16 +3,26 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
+import {
+  Paper,
+  Box,
+  Typography,
+  Button,
+  Chip,
+  IconButton,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  Divider,
+  Fade,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CircularProgress from "@mui/material/CircularProgress";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 interface ClassData {
   _id: string;
@@ -22,19 +32,14 @@ interface ClassData {
     dayOfWeek: string;
     startTime: string;
     endTime: string;
+    room: string;
   };
   location?: {
     latitude: number;
     longitude: number;
   };
   allowedRadius?: number;
-  cr?: {
-    name: string;
-    email: string;
-  };
   status?: "On Time" | "Cancelled" | "Rescheduled";
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 interface ApiResponse {
@@ -49,10 +54,8 @@ interface SnackbarState {
   severity: "success" | "error" | "warning" | "info";
 }
 
-// Format time from 24h to 12h format
 const formatTime = (time: string): string => {
   if (!time) return "TBA";
-
   try {
     const [hours, minutes] = time.split(":");
     const hour = parseInt(hours, 10);
@@ -64,10 +67,19 @@ const formatTime = (time: string): string => {
   }
 };
 
-// Format schedule for display
+function getDeviceInfo() {
+  const info = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    navigator.platform,
+  ].join("|");
+  return info;
+}
+
 const formatSchedule = (schedule: ClassData["schedule"]): string => {
   if (!schedule?.dayOfWeek) return "Schedule not available";
-
   const dayAbbreviation = schedule.dayOfWeek.substring(0, 3);
   const startTime = formatTime(schedule.startTime);
   const endTime = formatTime(schedule.endTime);
@@ -75,34 +87,18 @@ const formatSchedule = (schedule: ClassData["schedule"]): string => {
 };
 
 const fetchClassDetails = async (id: string): Promise<ClassData> => {
-  try {
-    const response = await fetch(`/api/classes/${id}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result: ApiResponse = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error || "Failed to fetch class details");
-    }
-
-    if (!result.data) {
-      throw new Error("No class data received");
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error("Error fetching class details:", error);
-    throw error;
-  }
+  const response = await fetch(`/api/classes/${id}`);
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const result: ApiResponse = await response.json();
+  if (!result.success || !result.data) throw new Error(result.error);
+  return result.data;
 };
 
 export default function ClassDetailPage() {
   const [classData, setClassData] = useState<ClassData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [markingAttendance, setMarkingAttendance] = useState<boolean>(false);
+  const [isPresent, setIsPresent] = useState<boolean | null>(null); // ✅ null = loading
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
@@ -113,47 +109,55 @@ export default function ClassDetailPage() {
   const { id } = useParams();
   const classId = id as string;
 
-  // Use a real user ID - replace this with an actual user ID from your database
-  const studentId = "657a1b8c9d8f4a2b3c5d6e8a"; // Make sure this is a valid ObjectId
-
   useEffect(() => {
     const loadClassData = async () => {
       try {
         const data = await fetchClassDetails(classId);
         setClassData(data);
-      } catch (error) {
-        console.error("Failed to fetch class details:", error);
+      } catch {
         setSnackbar({
           open: true,
-          message:
-            "Failed to load class details. Please check if the class exists.",
+          message: "Failed to load class details. Please try again.",
           severity: "error",
         });
       } finally {
         setLoading(false);
       }
     };
-
-    if (classId) {
-      loadClassData();
-    } else {
-      setLoading(false);
-      setSnackbar({
-        open: true,
-        message: "No class ID provided",
-        severity: "error",
-      });
-    }
+    if (classId) loadClassData();
   }, [classId]);
 
-  const handleBackToDashboard = () => {
-    router.push("/");
-  };
+  // ✅ Check attendance status (on mount)
+  useEffect(() => {
+    const checkAttendanceStatus = async () => {
+      try {
+        setIsPresent(null); // loading state
+        const response = await fetch(
+          `/api/attendance/status?classId=${classId}`
+        );
+        const result = await response.json();
+        if (result.success) {
+          setIsPresent(result.data.isPresent);
+        } else {
+          setIsPresent(false);
+        }
+      } catch {
+        setIsPresent(false);
+        setSnackbar({
+          open: true,
+          message: "Failed to check attendance status.",
+          severity: "error",
+        });
+      }
+    };
+    if (classId) checkAttendanceStatus();
+  }, [classId]);
+
+  const handleBackToDashboard = () => router.push("/classes");
 
   const handleMarkPresent = async () => {
     if (!classData) return;
 
-    // Get user's current location
     if (!navigator.geolocation) {
       setSnackbar({
         open: true,
@@ -170,23 +174,14 @@ export default function ClassDetailPage() {
         try {
           const { latitude, longitude } = position.coords;
 
-          console.log("Sending attendance request with:", {
-            student: studentId,
-            class: classData._id,
-            userLat: latitude,
-            userLon: longitude,
-          });
-
-          const response = await fetch("/api/attendance", {
+          const response = await fetch("/api/attendance/mark", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              student: studentId, // Use the actual studentId variable
               class: classData._id,
               userLat: latitude,
               userLon: longitude,
+              deviceInfo: getDeviceInfo(),
             }),
           });
 
@@ -198,6 +193,7 @@ export default function ClassDetailPage() {
               message: result.message || "Attendance marked successfully!",
               severity: "success",
             });
+            setIsPresent(true);
           } else {
             setSnackbar({
               open: true,
@@ -205,46 +201,25 @@ export default function ClassDetailPage() {
               severity: "error",
             });
           }
-        } catch (error) {
-          console.error("Error marking attendance:", error);
+        } catch {
           setSnackbar({
             open: true,
-            message: "Failed to mark attendance",
+            message: "Error marking attendance",
             severity: "error",
           });
         } finally {
           setMarkingAttendance(false);
         }
       },
-      (error: GeolocationPositionError) => {
-        console.error("Error getting location:", error);
-        let errorMessage = "Failed to get your location";
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage =
-              "Location access denied. Please enable location services.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out.";
-            break;
-        }
-
+      () => {
         setSnackbar({
           open: true,
-          message: errorMessage,
+          message: "Unable to get location. Check permissions.",
           severity: "error",
         });
         setMarkingAttendance(false);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -252,17 +227,13 @@ export default function ClassDetailPage() {
     event?: React.SyntheticEvent | Event,
     reason?: string
   ) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   const getStatusChip = (status: ClassData["status"]) => {
     if (!status) return null;
-
     let color: "success" | "error" | "warning" | "default" = "default";
-
     switch (status) {
       case "On Time":
         color = "success";
@@ -273,153 +244,143 @@ export default function ClassDetailPage() {
       case "Rescheduled":
         color = "warning";
         break;
-      default:
-        color = "default";
     }
-
     return <Chip label={status} color={color} sx={{ mt: 1 }} />;
   };
 
-  if (loading) {
+  if (loading)
     return (
       <Box
         sx={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          minHeight: "50vh",
-          padding: 3,
+          minHeight: "70vh",
         }}
       >
         <CircularProgress />
       </Box>
     );
-  }
 
-  if (!classData) {
+  if (!classData)
     return (
-      <Box sx={{ padding: 3 }}>
-        <Paper elevation={3} sx={{ padding: 3, textAlign: "center" }}>
-          <Typography variant="h4" color="error">
-            Class not found
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2, mb: 3 }}>
-            The class with ID "{id}" could not be found.
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={handleBackToDashboard}
-            sx={{ mt: 2 }}
-          >
-            Back to Dashboard
-          </Button>
-        </Paper>
+      <Box sx={{ textAlign: "center", mt: 5 }}>
+        <Typography variant="h5" color="error">
+          Class not found
+        </Typography>
+        <Button
+          sx={{ mt: 2 }}
+          variant="outlined"
+          onClick={handleBackToDashboard}
+        >
+          Back
+        </Button>
       </Box>
     );
-  }
 
   return (
     <Box
       sx={{
         flexGrow: 1,
         padding: 3,
-        backgroundColor: "#f4f6f8",
+        backgroundColor: "#f5f7fa",
         minHeight: "100vh",
       }}
     >
       <Paper
-        elevation={3}
-        sx={{ padding: 3, borderRadius: 2, maxWidth: 800, margin: "0 auto" }}
+        elevation={4}
+        sx={{
+          padding: 4,
+          borderRadius: 3,
+          maxWidth: 700,
+          margin: "auto",
+          background: "#fff",
+        }}
       >
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <IconButton onClick={handleBackToDashboard} sx={{ mr: 1 }}>
+          <IconButton onClick={handleBackToDashboard}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4" sx={{ ml: 1, fontWeight: 600 }}>
             {classData.name}
           </Typography>
         </Box>
 
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          Code: {classData.code}
+        <Typography variant="h6" color="primary" gutterBottom>
+          {classData.code}
         </Typography>
 
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-          Schedule: {formatSchedule(classData.schedule)}
-        </Typography>
+        <Divider sx={{ mb: 2 }} />
 
-        {classData.cr && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-            Class Representative: {classData.cr.name} ({classData.cr.email})
+        <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
+          <ScheduleIcon sx={{ mr: 1, color: "text.secondary" }} />
+          <Typography color="text.secondary">
+            {formatSchedule(classData.schedule)}
           </Typography>
-        )}
-
-        {classData.location && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-            Location: {classData.location.latitude.toFixed(6)},{" "}
-            {classData.location.longitude.toFixed(6)}
-          </Typography>
-        )}
-
-        {classData.allowedRadius && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-            Allowed Radius: {classData.allowedRadius} meters
-          </Typography>
-        )}
-
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" component="span" color="text.secondary">
-            Status:{" "}
-          </Typography>
-          {getStatusChip(classData.status) || (
-            <Chip label="Active" color="default" sx={{ mt: 1 }} />
-          )}
         </Box>
 
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={handleMarkPresent}
-          disabled={classData.status === "Cancelled" || markingAttendance}
-          sx={{ position: "relative" }}
-        >
-          {markingAttendance ? (
-            <>
-              <CircularProgress
-                size={24}
-                sx={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  marginTop: "-12px",
-                  marginLeft: "-12px",
-                }}
-              />
-              Marking...
-            </>
-          ) : (
-            "Mark Present"
-          )}
-        </Button>
-
-        {classData.status === "Cancelled" && (
-          <Typography variant="body2" color="error" sx={{ mt: 2 }}>
-            This class has been cancelled. Attendance cannot be marked.
-          </Typography>
+        {classData.location && (
+          <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
+            <LocationOnIcon sx={{ mr: 1, color: "text.secondary" }} />
+            <Typography color="text.secondary">
+              {/* Lat: {classData.location.latitude.toFixed(6)} | Lon:{" "} */}
+              {/* {classData.location.longitude.toFixed(6)} | Radius:{" "} */}
+              Mark Attendance within {classData.allowedRadius || 30}m of classroom | Room:{" "}
+              {classData.schedule.room || "TBA"}
+            </Typography>
+          </Box>
         )}
 
-        {!classData.location && (
-          <Typography variant="body2" color="warning.main" sx={{ mt: 2 }}>
-            Note: No location set for this class. Attendance marking might not
-            work properly.
-          </Typography>
-        )}
+        <Box sx={{ mt: 2 }}>
+          {getStatusChip(classData.status)}
+
+          {/* ✅ Attendance Status */}
+          <Fade in={isPresent !== null}>
+            <Box sx={{ mt: 2 }}>
+              {isPresent === null ? (
+                <Chip
+                  icon={<HourglassEmptyIcon />}
+                  label="Checking attendance..."
+                  color="info"
+                />
+              ) : isPresent ? (
+                <Chip
+                  icon={<CheckCircleIcon />}
+                  label="Attendance Marked"
+                  color="success"
+                />
+              ) : (
+                <Chip
+                  icon={<CancelIcon />}
+                  label="Not Marked Yet"
+                  color="warning"
+                />
+              )}
+            </Box>
+          </Fade>
+        </Box>
+
+        <Box sx={{ mt: 4, textAlign: "center" }}>
+          <Button
+            variant="contained"
+            color={isPresent ? "success" : "primary"}
+            size="large"
+            onClick={handleMarkPresent}
+            disabled={markingAttendance || isPresent}
+            sx={{ px: 5, py: 1.5, fontSize: "1rem", fontWeight: 600 }}
+          >
+            {isPresent
+              ? "Attendance Marked"
+              : markingAttendance
+              ? "Marking..."
+              : "Mark Present"}
+          </Button>
+        </Box>
       </Paper>
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={5000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >

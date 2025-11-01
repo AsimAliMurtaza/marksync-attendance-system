@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/libs/mongodb";
 import Class from "@/models/Class";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
 interface Params {
-  params: {
-    id: string;
-  };
+  params: { id: string };
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
@@ -41,70 +41,52 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
+    const body = await req.json();
+    const { id } = params;
 
-    if (!params.id) {
-      return NextResponse.json(
-        { success: false, error: "Class ID is required" },
-        { status: 400 }
-      );
-    }
+    const updated = await Class.findByIdAndUpdate(id, body, { new: true });
 
-    const body = await request.json();
-
-    const classData = await Class.findByIdAndUpdate(params.id, body, {
-      new: true,
-      runValidators: true,
-    }).populate("cr", "name email");
-
-    if (!classData) {
+    if (!updated)
       return NextResponse.json(
         { success: false, error: "Class not found" },
         { status: 404 }
       );
-    }
 
-    return NextResponse.json({ success: true, data: classData });
+    return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     console.error("Error updating class:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     await dbConnect();
+    const { id } = params;
 
-    if (!params.id) {
-      return NextResponse.json(
-        { success: false, error: "Class ID is required" },
-        { status: 400 }
-      );
-    }
+    const deleted = await Class.findByIdAndDelete(id);
 
-    const deletedClass = await Class.findByIdAndDelete(params.id);
-
-    if (!deletedClass) {
+    if (!deleted)
       return NextResponse.json(
         { success: false, error: "Class not found" },
         { status: 404 }
       );
-    }
 
     return NextResponse.json({
       success: true,
-      data: { message: "Class deleted successfully" },
+      message: "Class deleted successfully",
     });
   } catch (error: any) {
     console.error("Error deleting class:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

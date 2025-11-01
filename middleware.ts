@@ -18,8 +18,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // 🔒 Block user dashboard for admins
-  if (isUserDashboard && token?.role === "admin") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (isUserDashboard && token?.role === "cr") {
+    return NextResponse.redirect(new URL("/admin", req.url));
   }
 
 

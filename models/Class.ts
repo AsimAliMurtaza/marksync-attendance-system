@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const ClassSchema = new mongoose.Schema({
   name: { type: String, required: true },
   code: { type: String, required: true, unique: true },
-  cr: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   location: { 
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true }
@@ -17,6 +16,7 @@ const ClassSchema = new mongoose.Schema({
     },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
+    room: { type: String, required: true },
   },
 }, { timestamps: true });
 
