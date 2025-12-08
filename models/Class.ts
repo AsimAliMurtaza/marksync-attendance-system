@@ -18,6 +18,7 @@ const ClassSchema = new mongoose.Schema({
     endTime: { type: String, required: true },
     room: { type: String, required: true },
   },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
 export default mongoose.models.Class || mongoose.model('Class', ClassSchema);

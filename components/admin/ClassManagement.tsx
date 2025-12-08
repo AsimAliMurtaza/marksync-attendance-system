@@ -22,12 +22,14 @@ import Grid from "@mui/material/GridLegacy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { ClassData, ClassForm } from "@/types/types";
+import { useSession } from "next-auth/react";
 
 export default function ClassManagement() {
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const session = useSession();
 
   const [form, setForm] = useState<ClassForm>({
     name: "",
@@ -35,6 +37,7 @@ export default function ClassManagement() {
     allowedRadius: 30,
     location: { latitude: 0, longitude: 0 },
     schedule: { dayOfWeek: "", startTime: "", endTime: "", room: "" },
+    createdBy: "",
   });
   // Fetch all classes
   const fetchClasses = async () => {
@@ -121,6 +124,7 @@ export default function ClassManagement() {
         endTime: "",
         room: "",
       },
+      createdBy: session.data?.user?.id || "",
     });
     setOpenDialog(true);
   };

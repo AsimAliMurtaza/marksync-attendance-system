@@ -14,6 +14,7 @@ export interface ClassData {
   };
   allowedRadius?: number;
   status?: "On Time" | "Cancelled" | "Rescheduled";
+  createdBy: string;
 }
 
 export interface ApiResponse {
@@ -52,4 +53,5 @@ export interface ClassForm {
     endTime: string;
     room: string;
   };
+  createdBy: string;
 };

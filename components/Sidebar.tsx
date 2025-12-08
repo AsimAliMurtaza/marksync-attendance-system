@@ -12,12 +12,14 @@ import {
   Tooltip,
   Divider,
   Typography,
+  Button,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export const drawerWidth = 200;
 export const collapsedWidth = 72;
@@ -65,7 +67,7 @@ export default function Sidebar({
           display: "flex",
           alignItems: "center",
           justifyContent: open ? "flex-end" : "center",
-          p: 1,
+          p: 2,
         }}
       >
         <Typography
@@ -124,6 +126,17 @@ export default function Sidebar({
           </Tooltip>
         ))}
       </List>
+      <Divider />
+      <Button
+        variant="contained"
+        onClick={() => {
+          signOut({ callbackUrl: "/login" });
+        }}
+        color="primary"
+        sx={{ mb: 2, zIndex: 1000 }}
+      >
+        Logout
+      </Button>
     </Drawer>
   );
 }

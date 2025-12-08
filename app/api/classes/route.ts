@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
       code,
       location,
       allowedRadius,
-      schedule
+      schedule,
+      createdBy
     } = body;
 
     if (
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
       !schedule?.dayOfWeek ||
       !schedule?.startTime ||
       !schedule?.endTime ||
-      !schedule?.room
+      !schedule?.room ||
+      !createdBy
     ) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
       location,
       allowedRadius,
       schedule,
+      createdBy
     });
 
     return NextResponse.json({ success: true, data: newClass });
