@@ -5,9 +5,12 @@ import { Box, Tabs, Tab, Typography, Paper, Button } from "@mui/material";
 import ClassManagement from "@/components/admin/ClassManagement";
 import AttendanceReports from "@/components/admin/AttendanceReports";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 
 export default function AdminDashboard() {
   const [tabIndex, setTabIndex] = useState(0);
+  const router = useRouter();
 
   return (
     <Box
@@ -20,7 +23,16 @@ export default function AdminDashboard() {
       <Typography variant="h4" fontWeight={600} mb={3}>
         Admin Dashboard
       </Typography>
-
+      <Button
+        variant="contained"
+        onClick={() => {
+          router.push("/profile");
+        }}
+        color="primary"
+        sx={{ mb: 2 }}
+      >
+        Profile
+      </Button>
       <Button
         variant="contained"
         onClick={() => {

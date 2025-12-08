@@ -20,9 +20,10 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { FiLogOut } from "react-icons/fi";
 
 export const drawerWidth = 200;
-export const collapsedWidth = 72;
+export const collapsedWidth = 76;
 
 export default function Sidebar({
   onToggle,
@@ -59,35 +60,37 @@ export default function Sidebar({
           bgcolor: "#ffffff",
           borderRight: "1px solid #e0e0e0",
           borderRadius: 0,
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
+      {/* Top Header */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: open ? "flex-end" : "center",
-          p: 2,
+          p: 1,
         }}
       >
-        <Typography
-          variant="h6"
-          noWrap
-          sx={{ flexGrow: 1, mr: 2, color: "#1976d2" }}
-        >
-          marksync
-        </Typography>
+        {open && (
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{ flexGrow: 1, mr: 2, color: "#1976d2" }}
+          >
+            marksync
+          </Typography>
+        )}
         <IconButton onClick={toggleDrawer}>
-          {open ? (
-            <ChevronLeftIcon sx={{ justifyContent: "flex-end" }} />
-          ) : (
-            <MenuIcon />
-          )}
+          {open ? <ChevronLeftIcon /> : <MenuIcon />}
         </IconButton>
       </Box>
 
       <Divider />
 
+      {/* Menu */}
       <List sx={{ mt: 1 }}>
         {menuItems.map((item) => (
           <Tooltip
@@ -126,17 +129,22 @@ export default function Sidebar({
           </Tooltip>
         ))}
       </List>
+
+      {/* Spacer that pushes logout to bottom */}
+      <Box sx={{ flexGrow: 1 }} />
+
       <Divider />
-      <Button
-        variant="contained"
-        onClick={() => {
-          signOut({ callbackUrl: "/login" });
-        }}
-        color="primary"
-        sx={{ mb: 2, zIndex: 1000 }}
-      >
-        Logout
-      </Button>
+
+      {/* Logout at Bottom */}
+      <Box sx={{ p: 1 }}>
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          startIcon={<FiLogOut />}
+        />
+      </Box>
     </Drawer>
   );
 }

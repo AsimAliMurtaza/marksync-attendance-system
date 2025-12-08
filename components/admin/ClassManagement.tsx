@@ -118,6 +118,7 @@ export default function ClassManagement() {
       code: "",
       location: { latitude: 0, longitude: 0 },
       allowedRadius: 30,
+      //need to update schedule to include different days in the same class object
       schedule: {
         dayOfWeek: "",
         startTime: "",

@@ -249,108 +249,140 @@ export default function ClassDetailPage(): JSX.Element {
     );
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3, bgcolor: "#f5f7fa", minHeight: "100vh" }}>
-      <Paper
-        elevation={2}
+  <Box
+    sx={{
+      flexGrow: 1,
+      px: { xs: 2, sm: 4, md: 8 },
+      py: { xs: 3, md: 5 },
+      bgcolor: "#f5f7fa",
+      minHeight: "100vh",
+    }}
+  >
+    <Paper
+      elevation={1}
+      sx={{
+        p: { xs: 3, sm: 4, md: 6 },
+        borderRadius: 2,
+        maxWidth: "1200px",   // ✅ wide but not stupid-wide
+        mx: "auto",
+        bgcolor: "#ffffff",
+      }}
+    >
+      {/* Header */}
+      <Box
         sx={{
-          p: 8,
-          borderRadius: 1,
-          maxWidth: 700,
-          m: "auto",
-          bgcolor: "#ffffff",
+          display: "flex",
+          alignItems: "center",
+          mb: 4,
+          gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <IconButton onClick={handleBackToDashboard}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h4" sx={{ ml: 1, fontWeight: 600 }}>
+        <IconButton onClick={handleBackToDashboard}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Box>
+          <Typography variant="h4" fontWeight={600}>
             {classData.name}
           </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            {classData.code}
+          </Typography>
         </Box>
+      </Box>
 
-        <Typography variant="h6" color="primary" gutterBottom>
-          {classData.code}
-        </Typography>
+      <Divider sx={{ mb: 4 }} />
 
-        <Divider sx={{ mb: 2 }} />
-
-        <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
-          <ScheduleIcon sx={{ mr: 1, color: "text.secondary" }} />
+      {/* Info Section */}
+      <Box sx={{ display: "grid", gap: 2, mb: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <ScheduleIcon sx={{ color: "text.secondary" }} />
           <Typography color="text.secondary">
             {formatSchedule(classData.schedule)}
           </Typography>
         </Box>
 
         {classData.location && (
-          <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
-            <LocationOnIcon sx={{ mr: 1, color: "text.secondary" }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <LocationOnIcon sx={{ color: "text.secondary" }} />
             <Typography color="text.secondary">
-              Mark Attendance within {classData.allowedRadius ?? 30}m of
-              classroom | Room: {classData.schedule.room || "TBA"}
+              Mark Attendance within {classData.allowedRadius ?? 30}m | Room:{" "}
+              {classData.schedule.room || "TBA"}
             </Typography>
           </Box>
         )}
+      </Box>
 
-        <Box sx={{ mt: 2 }}>
-          {getStatusChip(classData.status)}
-          <Fade in={isPresent !== null}>
-            <Box sx={{ mt: 2 }}>
-              {isPresent === null ? (
-                <Chip
-                  icon={<HourglassEmptyIcon />}
-                  label="Checking attendance..."
-                  color="info"
-                />
-              ) : isPresent ? (
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label="Attendance Marked"
-                  color="success"
-                />
-              ) : (
-                <Chip
-                  icon={<CancelIcon />}
-                  label="Not Marked Yet"
-                  color="warning"
-                />
-              )}
-            </Box>
-          </Fade>
-        </Box>
+      {/* Status Section */}
+      <Box sx={{ mb: 5 }}>
+        {getStatusChip(classData.status)}
 
-        <Box sx={{ mt: 4, textAlign: "center" }}>
-          <Button
-            variant="contained"
-            color={isPresent ? "success" : "primary"}
-            size="large"
-            onClick={handleMarkPresent}
-            disabled={markingAttendance || !!isPresent}
-            sx={{ px: 5, py: 1.5, fontSize: "1rem", fontWeight: 600 }}
-          >
-            {isPresent
-              ? "Attendance Marked"
-              : markingAttendance
-              ? "Marking..."
-              : "Mark Present"}
-          </Button>
-        </Box>
-      </Paper>
+        <Fade in={isPresent !== null}>
+          <Box sx={{ mt: 2 }}>
+            {isPresent === null ? (
+              <Chip
+                icon={<HourglassEmptyIcon />}
+                label="Checking attendance..."
+                color="info"
+              />
+            ) : isPresent ? (
+              <Chip
+                icon={<CheckCircleIcon />}
+                label="Attendance Marked"
+                color="success"
+              />
+            ) : (
+              <Chip
+                icon={<CancelIcon />}
+                label="Not Marked Yet"
+                color="warning"
+              />
+            )}
+          </Box>
+        </Fade>
+      </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={5000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
+      <Divider sx={{ mb: 4 }} />
+
+      {/* Action Area */}
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Button
+          variant="contained"
+          color={isPresent ? "success" : "primary"}
+          size="large"
+          onClick={handleMarkPresent}
+          disabled={markingAttendance || !!isPresent}
+          sx={{
+            px: 6,
+            py: 1.6,
+            fontSize: "1rem",
+            fontWeight: 600,
+            borderRadius: 2,
+          }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
-  );
+          {isPresent
+            ? "Attendance Marked"
+            : markingAttendance
+            ? "Marking..."
+            : "Mark Present"}
+        </Button>
+      </Box>
+    </Paper>
+
+    {/* Snackbar */}
+    <Snackbar
+      open={snackbar.open}
+      autoHideDuration={5000}
+      onClose={handleCloseSnackbar}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    >
+      <Alert
+        onClose={handleCloseSnackbar}
+        severity={snackbar.severity}
+        sx={{ width: "100%" }}
+      >
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
+  </Box>
+);
 }
