@@ -12,15 +12,18 @@ import {
   Tooltip,
   Divider,
   Typography,
+  Button,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { FiLogOut } from "react-icons/fi";
 
 export const drawerWidth = 200;
-export const collapsedWidth = 72;
+export const collapsedWidth = 76;
 
 export default function Sidebar({
   onToggle,
@@ -57,9 +60,12 @@ export default function Sidebar({
           bgcolor: "#ffffff",
           borderRight: "1px solid #e0e0e0",
           borderRadius: 0,
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
+      {/* Top Header */}
       <Box
         sx={{
           display: "flex",
@@ -68,24 +74,23 @@ export default function Sidebar({
           p: 1,
         }}
       >
-        <Typography
-          variant="h6"
-          noWrap
-          sx={{ flexGrow: 1, mr: 2, color: "#1976d2" }}
-        >
-          marksync
-        </Typography>
+        {open && (
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{ flexGrow: 1, mr: 2, color: "#1976d2" }}
+          >
+            marksync
+          </Typography>
+        )}
         <IconButton onClick={toggleDrawer}>
-          {open ? (
-            <ChevronLeftIcon sx={{ justifyContent: "flex-end" }} />
-          ) : (
-            <MenuIcon />
-          )}
+          {open ? <ChevronLeftIcon /> : <MenuIcon />}
         </IconButton>
       </Box>
 
       <Divider />
 
+      {/* Menu */}
       <List sx={{ mt: 1 }}>
         {menuItems.map((item) => (
           <Tooltip
@@ -124,6 +129,22 @@ export default function Sidebar({
           </Tooltip>
         ))}
       </List>
+
+      {/* Spacer that pushes logout to bottom */}
+      <Box sx={{ flexGrow: 1 }} />
+
+      <Divider />
+
+      {/* Logout at Bottom */}
+      <Box sx={{ p: 1 }}>
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          startIcon={<FiLogOut />}
+        />
+      </Box>
     </Drawer>
   );
 }

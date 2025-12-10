@@ -22,12 +22,14 @@ import Grid from "@mui/material/GridLegacy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { ClassData, ClassForm } from "@/types/types";
+import { useSession } from "next-auth/react";
 
 export default function ClassManagement() {
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const session = useSession();
 
   const [form, setForm] = useState<ClassForm>({
     name: "",
@@ -35,10 +37,11 @@ export default function ClassManagement() {
     allowedRadius: 30,
     location: { latitude: 0, longitude: 0 },
     schedule: { dayOfWeek: "", startTime: "", endTime: "", room: "" },
+    createdBy: "",
   });
   // Fetch all classes
   const fetchClasses = async () => {
-    const res = await fetch("/api/classes");
+    const res = await fetch("/api/admin/classes");
     const result = await res.json();
     if (result.success) setClasses(result.data);
     setLoading(false);
@@ -78,7 +81,7 @@ export default function ClassManagement() {
 
   const handleSave = async () => {
     const method = editMode ? "PUT" : "POST";
-    const url = editMode ? `/api/classes/${form._id}` : `/api/classes`;
+    const url = editMode ? `/api/admin/classes/${form._id}` : `/api/admin/classes`;
 
     const res = await fetch(url, {
       method,
@@ -103,7 +106,7 @@ export default function ClassManagement() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this class?")) return;
-    const res = await fetch(`/api/classes/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/classes/${id}`, { method: "DELETE" });
     const result = await res.json();
     if (result.success) fetchClasses();
   };
@@ -115,12 +118,14 @@ export default function ClassManagement() {
       code: "",
       location: { latitude: 0, longitude: 0 },
       allowedRadius: 30,
+      //need to update schedule to include different days in the same class object
       schedule: {
         dayOfWeek: "",
         startTime: "",
         endTime: "",
         room: "",
       },
+      createdBy: session.data?.user?.id || "",
     });
     setOpenDialog(true);
   };

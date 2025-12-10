@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/libs/mongodb";
 import Class from "@/models/Class";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../auth/[...nextauth]/options";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user?.role !== "cr") {
+      console.log("Unauthorized access attempt to admin classes");
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const uid = session.user?.id;
+    if (!uid) {
+      return NextResponse.json(
+        { success: false, error: "User ID not found in session" },
+        { status: 400 }
+      );
+    }
     await dbConnect();
-    const classes = await Class.find().sort({ createdAt: -1 });
+    //the createdBy has an objectID of the user who created the class
+    const classes = await Class.find({ createdBy: uid }).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, data: classes });
   } catch (error) {
     console.error("Error fetching classes:", error);
