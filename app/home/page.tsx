@@ -56,7 +56,7 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await fetch("/api/classes");
+        const res = await fetch("/api/classes/enrolled");
         const result: ApiResponse = await res.json();
         if (!result.success) throw new Error(result.error);
         setClasses(result.data as ClassData[]);
@@ -73,7 +73,7 @@ export default function Home() {
     loadData();
   }, []);
 
-  const handleClassClick = (id: string) => router.push(`/classes/${id}`);
+  const handleClassClick = (id: string) => router.push(`/home/${id}`);
 
   const handleCloseSnackbar = () =>
     setSnackbar((prev) => ({ ...prev, open: false }));
