@@ -3,17 +3,9 @@ import dbConnect from "@/libs/mongodb";
 import Class from "@/models/Class";
 
 export async function GET() {
-  try {
-    await dbConnect();
-    const classes = await Class.find().sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, data: classes });
-  } catch (error) {
-    console.error("Error fetching classes:", error);
-    return NextResponse.json(
-      { success: false, error: (error as Error).message },
-      { status: 500 }
-    );
-  }
+  await dbConnect();
+  const classes = await Class.find({}).lean();
+  return NextResponse.json(classes);  // return array directly
 }
 
 export async function POST(req: NextRequest) {

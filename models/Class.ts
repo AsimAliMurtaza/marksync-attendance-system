@@ -1,24 +1,40 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const ClassSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  code: { type: String, required: true, unique: true },
-  location: { 
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true }
-  },
-  allowedRadius: { type: Number, required: true, default: 30 },
-  schedule: {
-    dayOfWeek: { 
-      type: String, 
-      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], 
-      required: true 
+const ClassSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    code: { type: String, required: true, unique: true },
+    location: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
     },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
-    room: { type: String, required: true },
+    allowedRadius: { type: Number, required: true, default: 30 },
+    schedule: {
+      dayOfWeek: {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        required: true,
+      },
+      startTime: { type: String, required: true },
+      endTime: { type: String, required: true },
+      room: { type: String, required: true },
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    enrolledStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-export default mongoose.models.Class || mongoose.model('Class', ClassSchema);
+export default mongoose.models.Class || mongoose.model("Class", ClassSchema);

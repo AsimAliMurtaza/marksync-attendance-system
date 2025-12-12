@@ -21,6 +21,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { FiLogOut } from "react-icons/fi";
+import { MdClass } from "react-icons/md";
 
 export const drawerWidth = 200;
 export const collapsedWidth = 76;
@@ -42,7 +43,8 @@ export default function Sidebar({
   };
 
   const menuItems = [
-    { text: "Home", icon: <HomeIcon />, route: "/classes" },
+    { text: "Home", icon: <HomeIcon />, route: "/home" },
+    { text: "Register Courses", icon: <MdClass />, route: "/home/register-courses" },
     { text: "Profile", icon: <AccountCircleIcon />, route: "/profile" },
   ];
 

@@ -119,7 +119,7 @@ export default function ClassDetailPage(): JSX.Element {
   }, [classId]);
 
   const handleBackToDashboard = (): void => {
-    router.push("/classes");
+    router.push("/home");
   };
 
   const handleMarkPresent = async (): Promise<void> => {

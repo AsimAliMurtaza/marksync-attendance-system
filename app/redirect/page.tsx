@@ -13,6 +13,6 @@ export default async function RedirectPage() {
   if (session?.user?.role === "cr") {
     redirect("/admin");
   } else {
-    redirect("/classes");
+    redirect("/home");
   }
 }
